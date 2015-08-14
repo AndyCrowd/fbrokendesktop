@@ -1,0 +1,59 @@
+#!/bin/bash
+##Version 1.0.0-1
+#
+#License: GPL2
+#
+#Author: Andy Crowd
+#Tested in Arch Linux
+#Search for Broken Exec in *.desktop
+#
+if [ "$1" ];then
+ if [[ -d "$1" || -f "$1" ]];then
+  DskPath[0]="$1";
+ fi
+else
+DskPath[0]="/usr/share/applications/"
+DskPath[1]="$HOME/.local/share/applications/"
+DskPath[2]="/usr/local/share/applications"
+DskPath[3]="/etc/xdg/autostart/"
+DskPath[4]="$HOME/.config/autostart/"
+DskPath[5]="$XDG_CONFIG_DIRS/autostart/"
+DskPath[6]="$XDG_CONFIG_HOME/autostart/"
+DskPath[7]="/usr/share/gnome/autostart/"
+
+#### Search with no subdirs
+MaxDepth[8]="-maxdepth 1"
+DskPath[8]="$HOME/Desktop"
+####
+
+DskPath[9]="/usr/etc/xdg/autostart/"
+DskPath[10]="/usr/share/mimelnk/application/"
+DskPath[11]="/usr/share/mimelnk/chemical/"
+DskPath[12]="/usr/lib/libreoffice/share/xdg/"
+DskPath[13]="/usr/share/xsessions/"
+DskPath[14]="/usr/share/apps/kdm/sessions/"
+DskPath[15]="/usr/share/gdm/greeter/autostart/"
+DskPath[16]="/usr/share/wayland-sessions/"
+DskPath[17]="/usr/share/apps/kdm/programs/"
+DskPath[18]="/usr/share/mate/wm-properties/"
+
+fi
+
+Count=0
+
+while [ $Count -lt ${#DskPath[@]} ];do
+
+if [[ -d "${DskPath[Count]}" || -f "${DskPath[Count]}" ]];
+  then 
+   find "${DskPath[Count]}" -iname "*.desktop" -exec awk -v Fil="{}"  -F"=" '//{
+if(index($1,"Exec") == 1)
+ inExc=substr($0,index($0,"Exec")+5);
+}END{
+  split(inExc,Arr," ");
+FPath=Fil;
+if( inExc ){system("which "Arr[1]" &> /dev/null;if [ $? -ne 0 ];then echo "Arr[1]" "FPath";fi " ) };
+}' "{}" \;
+fi;
+
+Count=$((Count+1))
+done
