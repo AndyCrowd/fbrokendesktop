@@ -1,5 +1,5 @@
 #!/bin/bash
-##Version 1.0.0-1
+##Version 1.0.2-1
 #
 #License: GPL2
 #
@@ -7,10 +7,17 @@
 #Tested in Arch Linux
 #Search for Broken Exec in *.desktop
 #
+
+#echo "${#@}"
+count=0
+
 if [ "$1" ];then
+while [ "$count" -lt "${#@}"  ];do
  if [[ -d "$1" || -f "$1" ]];then
-  DskPath[0]="$1";
+  DskPath[count]="$1";
  fi
+count=$((count+1))
+done
 else
 DskPath[0]="/usr/share/applications/"
 DskPath[1]="$HOME/.local/share/applications/"
