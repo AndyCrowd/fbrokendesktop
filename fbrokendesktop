@@ -1,5 +1,5 @@
 #!/bin/bash
-##Version 1.0.2-1
+##Version 1.0.2-2
 #
 #License: GPL2
 #
@@ -54,7 +54,7 @@ if [[ -d "${DskPath[Count]}" || -f "${DskPath[Count]}" ]];
   then 
    find "${DskPath[Count]}" -iname "*.desktop" -exec awk -v Fil="{}"  -F"=" '//{
 if(index($1,"Exec") == 1)
- inExc=substr($0,index($0,"Exec")+5);
+ inExc=substr($0,index($0,"=")+1);
 }END{
   split(inExc,Arr," ");
 FPath=Fil;
@@ -63,4 +63,4 @@ if( inExc ){system("which "Arr[1]" &> /dev/null;if [ $? -ne 0 ];then echo "Arr[1
 fi;
 
 Count=$((Count+1))
-done
+done 
