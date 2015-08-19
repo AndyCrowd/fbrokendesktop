@@ -9,12 +9,18 @@
 #
 
 #echo "${#@}"
+
 count=0
 
 if [ "$1" ];then
-while [ "$count" -lt "${#@}"  ];do
+for fdPath
+ do
  if [[ -d "$1" || -f "$1" ]];then
-  DskPath[count]="$1";
+  DskPath[count]=$fdPath;
+count=$((count+1))
+else
+echo "Wrong path: $fdPath"
+  exit 1
  fi
 count=$((count+1))
 done
@@ -53,14 +59,13 @@ while [ $Count -lt ${#DskPath[@]} ];do
 if [[ -d "${DskPath[Count]}" || -f "${DskPath[Count]}" ]];
   then 
    find "${DskPath[Count]}" -iname "*.desktop" -exec awk -v Fil="{}"  -F"=" '//{
-if(index($1,"Exec") == 1)
- inExc=substr($0,index($0,"=")+1);
+if(index($0,"Exec") == 1)
+ inExc=$2;
 }END{
   split(inExc,Arr," ");
-FPath=Fil;
-if( inExc ){system("which "Arr[1]" &> /dev/null;if [ $? -ne 0 ];then echo "Arr[1]" "FPath";fi " ) };
+if( inExc ){system("which "Arr[1]" &> /dev/null;if [ $? -ne 0 ];then echo "Arr[1]" "Fil";fi " ) };
 }' "{}" \;
 fi;
 
 Count=$((Count+1))
-done 
+done
