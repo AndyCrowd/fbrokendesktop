@@ -1,5 +1,5 @@
 #!/bin/bash
-##Version 1.0.2-2
+##Version 2.0.0-1
 #
 #License: GPL2
 #
@@ -7,22 +7,15 @@
 #Tested in Arch Linux
 #Search for Broken Exec in *.desktop
 #
-
-#echo "${#@}"
-
-count=0
-
 if [ "$1" ];then
 for fdPath
  do
  if [[ -d "$1" || -f "$1" ]];then
-  DskPath[count]=$fdPath;
-count=$((count+1))
+  DskPath+=($fdPath);
 else
 echo "Wrong path: $fdPath"
   exit 1
  fi
-count=$((count+1))
 done
 else
 DskPath[0]="/usr/share/applications/"
@@ -51,21 +44,17 @@ DskPath[17]="/usr/share/apps/kdm/programs/"
 DskPath[18]="/usr/share/mate/wm-properties/"
 
 fi
+for fdPath in "${DskPath[@]}";do
+if [[ -d "$fdPath" || -f "$fdPath" ]];then
 
-Count=0
-
-while [ $Count -lt ${#DskPath[@]} ];do
-
-if [[ -d "${DskPath[Count]}" || -f "${DskPath[Count]}" ]];
-  then 
-   find "${DskPath[Count]}" -iname "*.desktop" -exec awk -v Fil="{}"  -F"=" '//{
+   find "$fdPath" -iname "*.desktop" -exec awk -v Fil="{}"  -F"=" '//{
 if(index($0,"Exec") == 1)
  inExc=$2;
 }END{
   split(inExc,Arr," ");
-if( inExc ){system("which "Arr[1]" &> /dev/null;if [ $? -ne 0 ];then echo "Arr[1]" "Fil";fi " ) };
+FPath=Fil;
+if( inExc ){system("which "Arr[1]" &> /dev/null;if [ $? -ne 0 ];then echo "Arr[1]" "FPath";fi " ) };
 }' "{}" \;
-fi;
+fi
 
-Count=$((Count+1))
 done
