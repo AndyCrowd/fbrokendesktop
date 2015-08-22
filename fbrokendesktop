@@ -6,7 +6,7 @@
 #Author: Andy Crowd
 #Tested in Arch Linux
 #Search for Broken Exec in *.desktop
-#
+#Thanks to grail LQ Guru for helping to simplify code
 if [ "$1" ];then
 for fdPath
  do
