@@ -41,6 +41,14 @@ path_list=(
   "$XDG_CONFIG_HOME/autostart"
 );
 
+if [ "$#" -ne 0 ]; then
+  # FIXME: is there a better way to do that?
+  path_list=()
+  for path in "$@"; do
+    path_list+=("$path")
+  done;
+fi
+
 for fdPath in "${path_list[@]}"; do
   if [[ -d "$fdPath" || -f "$fdPath" ]]; then
 
@@ -50,13 +58,16 @@ for fdPath in "${path_list[@]}"; do
     # NOTE: you use single quotes in file name. It's not a good idea to do that
     # NOTE: anyways, but same with spaces. Yet someone still does that!
     if (system(\"which '\"path\"' 2>/dev/null >/dev/null\") != 0)
-      print path\" \"filename
+      print path\" \"filename\" at line \"NR
     }
 
     {
       if (match(\$0, \"^Exec=\\\"[^\\\"]+\\\"\") != 0)
+        # 6 - character after first quote
+        # 7 - length of string without exec and quotes
         check_if_exists(substr(\$0, RSTART + 6, RLENGTH - 7));
       else if (match(\$0, \"^Exec=[^ ]+\") != 0)
+        # 5 - length of Exec=
         check_if_exists(substr(\$0, RSTART + 5, RLENGTH - 5));
     }" "{}" \;
   fi
