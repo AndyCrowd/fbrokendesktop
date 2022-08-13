@@ -1,5 +1,5 @@
 #!/bin/bash
-##Version 2.0.0-1
+##Version 2.0.1
 #
 #License: GPL2
 #
@@ -7,54 +7,68 @@
 #Tested in Arch Linux
 #Search for Broken Exec in *.desktop
 #Thanks to grail LQ Guru for helping to simplify code
-if [ "$1" ];then
-for fdPath
- do
- if [[ -d "$1" || -f "$1" ]];then
-  DskPath+=($fdPath);
-else
-echo "Wrong path: $fdPath"
-  exit 1
- fi
-done
-else
-DskPath[0]="/usr/share/applications/"
-DskPath[1]="$HOME/.local/share/applications/"
-DskPath[2]="/usr/local/share/applications"
-DskPath[3]="/etc/xdg/autostart/"
-DskPath[4]="$HOME/.config/autostart/"
-DskPath[5]="$XDG_CONFIG_DIRS/autostart/"
-DskPath[6]="$XDG_CONFIG_HOME/autostart/"
-DskPath[7]="/usr/share/gnome/autostart/"
 
-#### Search with no subdirs
-MaxDepth[8]="-maxdepth 1"
-DskPath[8]="$HOME/Desktop"
-####
+#changelog Sat, 13 Aug 2022 23:01:43 +0000
+# [hatkidchan] rewrote awk-script to be able to handle quotes in Exec= path,
+# as well as made script easier to read in general
 
-DskPath[9]="/usr/etc/xdg/autostart/"
-DskPath[10]="/usr/share/mimelnk/application/"
-DskPath[11]="/usr/share/mimelnk/chemical/"
-DskPath[12]="/usr/lib/libreoffice/share/xdg/"
-DskPath[13]="/usr/share/xsessions/"
-DskPath[14]="/usr/share/apps/kdm/sessions/"
-DskPath[15]="/usr/share/gdm/greeter/autostart/"
-DskPath[16]="/usr/share/wayland-sessions/"
-DskPath[17]="/usr/share/apps/kdm/programs/"
-DskPath[18]="/usr/share/mate/wm-properties/"
+path_list=(
+  # System-wide applications
+  "/usr/share/applications"
+  "/usr/local/share/applications"
 
-fi
-for fdPath in "${DskPath[@]}";do
-if [[ -d "$fdPath" || -f "$fdPath" ]];then
+  # Per-user applications
+  "$HOME/.local/share/applications"
+  "$HOME/Desktop"
 
-   find "$fdPath" -iname "*.desktop" -exec awk -v Fil="{}"  -F"=" '//{
-if(index($0,"Exec") == 1)
- inExc=$2;
-}END{
-  split(inExc,Arr," ");
-FPath=Fil;
-if( inExc ){system("which "Arr[1]" &> /dev/null;if [ $? -ne 0 ];then echo "Arr[1]" "FPath";fi " ) };
-}' "{}" \;
+  # DE-specific paths
+  "/usr/etc/xdg/autostart"
+  "/usr/share/mimelnk/application"
+  "/usr/share/mimelnk/chemical"
+  "/usr/lib/libreoffice/share/xdg"
+  "/usr/share/xsessions"
+  "/usr/share/apps/kdm/sessions"
+  "/usr/share/wayland-sessions"
+  "/usr/share/apps/kdm/programs"
+  "/usr/share/mate/wm-properties"
+
+  # Autostart
+  "/etc/xdg/autostart"
+  "/usr/share/gdm/greeter/autostart"
+  "/usr/share/gnome/autostart"
+  "$HOME/.config/autostart"
+  "$XDG_CONFIG_DIRS/autostart"
+  "$XDG_CONFIG_HOME/autostart"
+);
+
+if [ "$#" -ne 0 ]; then
+  # FIXME: is there a better way to do that?
+  path_list=()
+  for path in "$@"; do
+    path_list+=("$path")
+  done;
 fi
 
+for fdPath in "${path_list[@]}"; do
+  if [[ -d "$fdPath" || -f "$fdPath" ]]; then
+
+    find "$fdPath" -type f -iname "*.desktop" -exec awk -v filename="{}" "
+    function check_if_exists(path) {
+    # NOTE: this is still quite error-prone. for example, it may die when
+    # NOTE: you use single quotes in file name. It's not a good idea to do that
+    # NOTE: anyways, but same with spaces. Yet someone still does that!
+    if (system(\"which '\"path\"' 2>/dev/null >/dev/null\") != 0)
+      print path\" \"filename\" at line \"NR
+    }
+
+    {
+      if (match(\$0, \"^Exec=\\\"[^\\\"]+\\\"\") != 0)
+        # 6 - character after first quote
+        # 7 - length of string without exec and quotes
+        check_if_exists(substr(\$0, RSTART + 6, RLENGTH - 7));
+      else if (match(\$0, \"^Exec=[^ ]+\") != 0)
+        # 5 - length of Exec=
+        check_if_exists(substr(\$0, RSTART + 5, RLENGTH - 5));
+    }" "{}" \;
+  fi
 done
